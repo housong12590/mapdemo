@@ -9,6 +9,6 @@ COPY . /var/www/app/
 
 # 配置运行环境
 RUN pip install -r requirements.txt
-CMD python mapdemo.py
+CMD python  /var/www/app/mapdemo.py
 #RUN export LANG=C.UTF-8 && export FLASK_APP=pro.py && flask assets clean && flask assets build
 
