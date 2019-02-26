@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>功夫豆数据总览</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+    <style type="text/css">
+        @import url(http://fonts.googleapis.com/css?family=Droid+Sans+Mono:100,200,400);
+
+        .loading {
+            background: rgba(72, 71, 71, 0.81);
+            width: 100%;
+            height: 100%;
+            z-index: 99999;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+
+        .base {
+            height: 9em;
+            left: 50%;
+            margin: -7.5em;
+            padding: 3em;
+            position: absolute;
+            top: 50%;
+            width: 9em;
+            transform: rotateX(45deg) rotateZ(45deg);
+            transform-style: preserve-3d;
+        }
+
+        .cube,
+        .cube:after,
+        .cube:before {
+            content: '';
+            float: left;
+            height: 3em;
+            position: absolute;
+            width: 3em;
+        }
+
+        /* Top */
+        .cube {
+            background-color: #fde33f;
+            position: relative;
+            transform: translateZ(3em);
+            transform-style: preserve-3d;
+            transition: .25s;
+            box-shadow: 13em 13em 1.5em rgba(0, 0, 0, 0.1);
+            animation: anim 1s infinite;
+        }
+
+        .cube:after {
+            background-color: #f2d623;
+            transform: rotateX(-90deg) translateY(3em);
+            transform-origin: 100% 100%;
+        }
+
+        .cube:before {
+            background-color: #f2d32d;
+            transform: rotateY(90deg) translateX(3em);
+            transform-origin: 100% 0;
+        }
+
+        .cube:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .cube:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .cube:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .cube:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .cube:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .cube:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .cube:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .cube:nth-child(8) {
+            animation-delay: 0.4s;
+        }
+
+        .cube:nth-child(9) {
+            animation-delay: 0.45s;
+        }
+
+        @keyframes anim {
+            50% {
+                transform: translateZ(0.5em);
+            }
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: "微软雅黑";
+            font-size: 14px;
+            background: #181818;
+        }
+
+        a {
+            text-decoration: none;
+            color: #f2d623;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        #map {
+            height: 100%;
+            width: 100vw;
+            margin-left: -10vw;
+            background: #181818;
+            display: block;
+        }
+
+        .bottom {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            line-height: 40px;
+            background: -webkit-linear-gradient(right, rgba(23, 23, 23, 0.4), rgb(24, 24, 24) 80%, rgb(23, 23, 23));
+            background: -o-linear-gradient(right, rgba(23, 23, 23, 0.4), rgb(24, 24, 24) 80%, rgb(23, 23, 23));
+            background: linear-gradient(to left, rgba(23, 23, 23, 0.4), rgb(24, 24, 24) 80%, rgb(23, 23, 23));
+        }
+
+        .ctlbtn {
+            margin-left: 10px;
+        }
+
+        .right {
+            float: right;
+            margin-right: 10px;
+            color: #fff;
+        }
+
+        .panel {
+            position: absolute;
+            z-index: 999;
+            right: 0;
+            top: 0;
+            width: 25vw;
+            height: 100%;
+            background: rgba(30, 28, 28, 0.6);
+        }
+
+        .block {
+            border-bottom: 2px solid #333;
+            margin-left: 5%;
+            margin-right: 5%;
+            padding-top: 1.3vw;
+            padding-bottom: 1.3vw;
+        }
+
+        .logo img {
+            height: 3.2vw;
+        }
+
+        .make_info {
+            position: absolute;
+            z-index: 999;
+
+            margin: 0 auto;
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            border: 2px solid #f2d623;
+            border-radius: 8px;
+        }
+
+        .make_info:after {
+            content: '';
+            position: absolute;
+
+            width: 0;
+            height: 0;
+
+            border: 15px solid;
+            border-color: transparent;
+
+            border-top-color: #f2d623;
+
+            top: 100%;
+            left: 50%;
+            margin-left: -15px;
+        }
+
+        .mask {
+            width: 100%;
+            height: 100%;
+            background-image: -webkit-linear-gradient(top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.7) 100%);
+            border-radius: 8px;
+        }
+
+        .nickname {
+            color: #ff5494;
+            padding: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .city {
+            color: #897600;
+            padding: 3px;
+            padding-left: 5px;
+            background: #f2d623;
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-size: 12px;
+            border-bottom-left-radius: 9px;
+            max-width: 35px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .account {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            color: #fff;
+            padding: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 20px;
+            height: 20px;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .account_img {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .state {
+            color: #f2d623;
+        }
+
+        .print .total_print {
+            font-size: 3.9vw;
+            display: inline-block;
+            margin-right: 0.63vw;
+            font-family: 'Droid Sans Mono', sans-serif;
+        }
+
+        .print .icon {
+            font-size: 0.84vw;
+            display: inline-block;
+            vertical-align: bottom;
+            height: 3.9vw;
+            line-height: 2.6vw;
+        }
+
+        .print .icon img {
+            display: block;
+            height: 1vw;
+        }
+
+        .state .yesterday {
+            color: #aaa;
+        }
+
+        .state .yesterday .count {
+            color: #aaa;
+            display: inline-block;
+            font-size: 1.84vw;
+            font-family: 'Droid Sans Mono', sans-serif;
+            margin-right: 0.5vw;
+        }
+
+        .state .yesterday .span {
+            color: #353434;
+            background: #aaa;
+            display: inline-block;
+            font-size: 0.63vw;
+            padding: 0.15vw;
+            border-radius: 0.21vw;
+            vertical-align: super;
+        }
+
+        .twocol {
+            margin-top: 1.57vw;
+        }
+
+        .print_small {
+            display: inline-block;
+            width: 45%;
+        }
+
+        .print_small .total_print {
+            font-size: 1.84vw;
+            display: inline-block;
+            margin-right: 0.63vw;
+            font-family: 'Droid Sans Mono', sans-serif;
+        }
+
+        .print_small .icon {
+            font-size: 0.63vw;
+            display: inline-block;
+            line-height: 2;
+        }
+
+        .print_small .icon img {
+            display: block;
+        }
+
+        .print_small .yest_count {
+            color: #aaa;
+            font-size: 0.68vw;
+        }
+
+        .right_gay {
+            border-right: 1px solid #333;
+            margin-right: 0.52vw;
+            padding-right: 0.52vw;
+        }
+
+        .list {
+            color: #8d7f25;
+            font-size: 0.9vw;
+            margin-top: 1vw;
+        }
+
+        .list_head {
+            margin-bottom: 0.2vw;
+        }
+
+        .item {
+            border-bottom: 4px solid;
+            width: 20%;
+            position: relative;
+            height: 1.3vw;
+            margin-bottom: 0.1vw;
+        }
+
+        .item img {
+            height: 100%;
+            position: relative;
+            left: -0.3vw;
+            bottom: -4px;
+        }
+
+        .item .name {
+            font-size: 0.63vw;
+            color: #282727;
+            position: absolute;
+            bottom: 0;
+            left: 0.2vw;
+            font-weight: bold;
+        }
+
+        .item .size {
+            color: #8d7f25;
+            position: absolute;
+            bottom: 0;
+            left: 4vw;
+            font-size: 0.9vw;
+        }
+
+    </style>
+</head>
+<body>
+
+<!--<div class="loading">-->
+<!--<div class='base'>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--<div class='cube'></div>-->
+<!--</div>-->
+<!--</div>-->
+
+<div id="map"></div>
+
+<div class="panel">
+    <div class="block logo"><img
+            src="//statics.kuaixiumf.com/assets/logo2-1-116a9e0fbf1b41be4d357cae73b9f1ae7db0b0cfb48192551f75d4f3f63e43cd.png">
+    </div>
+
+    <div class="block state">
+        <div class="print">
+            <div class="total_print" id="total_print">-</div>
+            <div class="icon"><img
+                    src="//statics.kuaixiumf.com/assets/printer-cfcee9c32d4a8bc613bd0f44df5d7d8769df37df414690141c10b202e3c136c9.png">
+                今日打印量
+            </div>
+        </div>
+        <div class="yesterday">
+            <div class="count">402264</div>
+            <div class="span">昨日</div>
+        </div>
+
+        <div class="twocol">
+            <div class="print_small right_gay">
+                <div class="total_print" id="online">-</div>
+                <div class="icon"><img
+                        src="//statics.kuaixiumf.com/assets/online-6d713a91e279f8dfaabe651dcfcd6e1d1586d0d2eb04af34bab626135d8cda91.png">
+                    设备在线
+                </div>
+                <!--<div class="yest_count">1256</div>-->
+            </div>
+
+            <div class="print_small" style="width: 45%;margin-left: 0.52vw;">
+                <div class="total_print" id="tasks">-</div>
+                <div class="icon"><img
+                        src="//statics.kuaixiumf.com/assets/account-b1cb726f98eb9545fe61175bd2cdf68b30ada6e1aef612d9690574508d66b8de.png">
+                    任务在线
+                </div>
+                <!--<div class="yest_count">257</div>-->
+            </div>
+        </div>
+    </div>
+
+    <div class="block state" style="border-bottom: none">
+        <div class="print">
+            <div class="total_print" id="clients">-</div>
+            <div class="icon"><img
+                    src="//statics.kuaixiumf.com/assets/online-6d713a91e279f8dfaabe651dcfcd6e1d1586d0d2eb04af34bab626135d8cda91.png"
+                    style="width: 1.05vw">
+                设备总量
+            </div>
+        </div>
+
+        <div class="list">
+            <div class="list_head">
+                <img src="//statics.kuaixiumf.com/assets/city-8d2fdd86bf1f554a4b5117479cf5ec694c6ad2a026afde5498a44373ca36da6b.png"
+                     style="width: 1.05vw"> <span id="region_total">-</span> 城市
+            </div>
+            <div id="region_1" class="item" style="border-color: #8d7e2d;width: 100%">
+                <img src="//statics.kuaixiumf.com/assets/tag-666fd80f91111246a8a2dd83e5a186cc107e2358c8aceadd7603521b4e49b350.png">
+                <div class="name" id="region_name_1">-</div>
+                <div class="size" id="region_count_1">-</div>
+            </div>
+            <div id="region_2" class="item" style="border-color: #84761f;width: 80%">
+                <img src="//statics.kuaixiumf.com/assets/tag1-90f55a5aaf7106c065b0bb7105b77d973e70b98a4aec5e4deb0a3cde6bcbdc96.png">
+                <div class="name" id="region_name_2">-</div>
+                <div class="size" id="region_count_2">-</div>
+            </div>
+            <div id="region_3" class="item" style="border-color: #776a1e;width: 75%">
+                <img src="//statics.kuaixiumf.com/assets/tag2-74e8c3bade8d4ccefe75756b67a6aee163358c0a3689877d969510b8fc7fb926.png">
+                <div class="name" id="region_name_3">-</div>
+                <div class="size" id="region_count_3">-</div>
+            </div>
+            <div id="region_4" class="item" style="border-color: #635819;width: 50%">
+                <img src="//statics.kuaixiumf.com/assets/tag3-3b4f9aa78c1e5996f73f9a92b2f5629372e06271b37e42f8fa75db6c63e84c44.png">
+                <div class="name" id="region_name_4">-</div>
+                <div class="size" id="region_count_4">-</div>
+            </div>
+            <div id="region_5" class="item" style="border-color: #4b420c;width: 40%">
+                <img src="//statics.kuaixiumf.com/assets/tag4-8d7f083c46f7982bad1a886fead1dd387876bc7ee361935d0e254f0484753e16.png">
+                <div class="name" id="region_name_5">-</div>
+                <div class="size" id="region_count_5">-</div>
+            </div>
+
+        </div>
+
+        <div class="list">
+            <div class="list_head">
+                <img src="//statics.kuaixiumf.com/assets/scen-34ba5fb81481dadeeb1d5c59750a4cec25663e77ee5eac3d36724d47c8939b04.png"
+                     style="width: 1.05vw"> <span id="zone_total">-</span> 场景
+            </div>
+            <div id="zone_1" class="item" style="border-color: #8d7e2d;width: 100%">
+                <img src="//statics.kuaixiumf.com/assets/tag-666fd80f91111246a8a2dd83e5a186cc107e2358c8aceadd7603521b4e49b350.png">
+                <div class="name" id="zone_name_1">-</div>
+                <div class="size" id="zone_count_1">-</div>
+            </div>
+            <div id="zone_2" class="item" style="border-color: #84761f;width: 70%">
+                <img src="//statics.kuaixiumf.com/assets/tag1-90f55a5aaf7106c065b0bb7105b77d973e70b98a4aec5e4deb0a3cde6bcbdc96.png">
+                <div class="name" id="zone_name_2">-</div>
+                <div class="size" id="zone_count_2">-</div>
+            </div>
+            <div id="zone_3" class="item" style="border-color: #776a1e;width: 65%">
+                <img src="//statics.kuaixiumf.com/assets/tag2-74e8c3bade8d4ccefe75756b67a6aee163358c0a3689877d969510b8fc7fb926.png">
+                <div class="name" id="zone_name_3">-</div>
+                <div class="size" id="zone_count_3">-</div>
+            </div>
+            <div id="zone_4" class="item" style="border-color: #635819;width: 50%">
+                <img src="//statics.kuaixiumf.com/assets/tag3-3b4f9aa78c1e5996f73f9a92b2f5629372e06271b37e42f8fa75db6c63e84c44.png">
+                <div class="name" id="zone_name_4">-</div>
+                <div class="size" id="zone_count_4">-</div>
+            </div>
+            <div id="zone_5" class="item" style="border-color: #4b420c;width: 40%">
+                <img src="//statics.kuaixiumf.com/assets/tag4-8d7f083c46f7982bad1a886fead1dd387876bc7ee361935d0e254f0484753e16.png">
+                <div class="name" id="zone_name_5">-</div>
+                <div class="size" id="zone_count_5">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom">
+    <a class="ctlbtn" id="kiosk">全屏</a>
+    <a class="ctlbtn" href="/insight/logout">退出</a>
+</div>
+
+</body>
+</html>
+
+<script src="http://api.map.baidu.com/getscript?v=2.0&ak=FXtbv5ywNGiHETeHwyMfqGZNSESGWta6"></script>
+<!--<script src="http://api.map.baidu.com/api?v=2.0&ak=FXtbv5ywNGiHETeHwyMfqGZNSESGWta6"></script>-->
+<script src="http://mapv.baidu.com/build/mapv.min.js"></script>
+<script src="http://statics.kuaixiumf.com/assets/countup-4c0c601c1544108f84c0af43fa5f06b6cac5409ca7a309ad4ddb4f99d022394f.js"></script>
+<script src="http://libs.baidu.com/jquery/2.1.1/jquery.js"></script>
+
+<script type="text/javascript">
+    var map, pointLayer, pointDataSet, flashLayer, flashDataSet, designTimer, currentOverlay;
+
+    var designArr = [];
+    var lastDesignID = 0;
+
+    // 打印信息间隔
+    var designGap = 2;
+
+    // 闪烁点间隔
+    var flashLayerGap = 5;
+
+    // 打印量间隔
+    var totalMakeGap = 3;
+
+    // 信息间隔
+    var infoGap = 60;
+
+    $(document).ready(function () {
+
+        var windowHeight = $(window).height();
+        $(window).resize(function () {
+            var datta = $(window).height() - windowHeight;
+            if (datta > 0) {
+                map.centerAndZoom(new BMap.Point(105.403119, 38.028658), 5);
+                $('.logo').css('margin-top', datta / 2 + 'px');
+            } else {
+                location.href = location.href;
+            }
+        });
+
+        if (window.navigator.userAgent.indexOf("Chrome") === -1 && window.navigator.userAgent.indexOf("Safari") === -1) {
+            alert('请使用Google Chrome或Safari浏览器访问！');
+        }
+
+// 加载数据
+        LoadLazyInfo();
+        LoadTotalMake();
+
+// 初始化地图
+        InitMap();
+    });
+
+    function InitMap() {
+        map = new BMap.Map("map", {
+            enableMapClick: false
+        });
+
+        map.setDefaultCursor('default');
+        map.disableDragging();
+        map.disableDoubleClickZoom();
+        map.disable3DBuilding();
+        map.disableKeyboard();
+        map.centerAndZoom(new BMap.Point(105.403119, 38.028658), 5);
+
+// 地图自定义样式
+        map.setMapStyle({style: 'dark'});
+        console.log("initialize");
+        ComplexCustomOverlay.prototype = new BMap.Overlay();
+        ComplexCustomOverlay.prototype.initialize = function (map) {
+            this._map = map;
+
+            var div = $(
+                '<div class="make_info" style="background: url(' + this._headimgurl + ');background-size: cover;">' +
+                '<div class="mask">' +
+                '<div class="nickname">' + this._nickname + '</div>' +
+                '<div class="city">' + this._city + '</div>' +
+                '<div class="account">' +
+                '<img class="account_img" src="' + this._logo + '">' +
+                this._account + '</div>' +
+                '</div>' +
+                '</div>'
+            ).get(0);
+            this._div = div;
+
+            map.getPanes().labelPane.appendChild(div);
+
+            return div;
+        };
+
+        ComplexCustomOverlay.prototype.draw = function () {
+            var map = this._map;
+            var pixel = map.pointToOverlayPixel(this._point);
+            this._div.style.left = pixel.x - 50 + "px";
+            this._div.style.top = pixel.y - 115 + "px";
+        };
+
+// 加载原始点
+        LoadPoints();
+    }
+
+    function StartLoading() {
+        $('.loading').show();
+    }
+
+    function EndLoading() {
+        $('.loading').fadeOut();
+    }
+
+    // 复杂的自定义覆盖物
+    function ComplexCustomOverlay(point, nickname, headimgurl, city, account, logo) {
+        this._point = point;
+        this._nickname = nickname;
+        this._headimgurl = headimgurl;
+        this._city = city;
+        this._account = account;
+        this._logo = logo;
+    }
+
+    function LoadOverlay(x, y, nickname, headimg, city, account, logo) {
+        currentOverlay = new ComplexCustomOverlay(
+            new BMap.Point(x, y),
+            nickname,
+            headimg,
+            city,
+            account,
+            logo
+        );
+
+        map.addOverlay(currentOverlay);
+    }
+
+    function RemoveOverlay(overlay) {
+        map.removeOverlay(overlay);
+    }
+
+    function LoadPoints() {
+        console.log("LoadPoints");
+        $.ajax({
+            url: 'insight/map/points',
+            type: 'GET',
+            cache: false,
+            success: function (data) {
+                console.log("success");
+                var points = [];
+
+                for (var i = 0; i < data.length; i++) {
+                    points.push({
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [data[i][0], data[i][1]]
+                        }
+                    });
+                }
+
+                pointDataSet = new mapv.DataSet(points);
+                var options = {
+                    fillStyle: 'rgba(200, 200, 0, 0.8)',
+                    size: 1.5,
+                    draw: 'simple'
+                };
+
+                pointLayer = new mapv.baiduMapLayer(map, pointDataSet, options);
+
+                LoadActive();
+                LoadDesign();
+                EndLoading();
+            },
+            error: function () {
+                alert('加载失败，请刷新重试！');
+            }
+        })
+    }
+
+    function LoadActive() {
+        $.ajax({
+            url: 'insight/map/flash',
+            type: 'GET',
+            cache: false,
+            success: function (data) {
+                if (data.length > 0) {
+                    var points = [];
+
+                    for (var i = 0; i < data.length; i++) {
+                        points.push({
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [data[i][0], data[i][1]]
+                            },
+                            time: Math.random() * 10,
+                        });
+                    }
+
+                    if (flashDataSet != undefined) {
+                        flashDataSet.set(points);
+                    } else {
+                        flashDataSet = new mapv.DataSet(points);
+                    }
+
+                    if (flashLayer == undefined) {
+                        var options = {
+                            fillStyle: '#fff',
+                            size: 4,
+                            draw: 'simple',
+                            shadowColor: '#fff',
+                            shadowBlur: 40,
+                            animation: {
+                                steps: 10,
+                                trails: 1,
+                                duration: 1,
+                            }
+                        };
+
+                        flashLayer = new mapv.baiduMapLayer(map, flashDataSet, options);
+                    }
+                }
+            },
+            complete: function () {
+                setTimeout(function () {
+                    LoadActive();
+                }, flashLayerGap * 1000)
+            }
+        })
+    }
+
+    function NumUp(id, count, time) {
+        var start = parseInt($('#' + id).text());
+        if (isNaN(start)) {
+            start = 0;
+        }
+        new countUp(id, start, count, 0, time).start();
+    }
+
+    function LoadTotalMake() {
+        $.ajax({
+            url: 'insight/map/total',
+            type: 'GET',
+            cache: false,
+            success: function (data) {
+                NumUp("total_print", data.count, totalMakeGap);
+            },
+            complete: function () {
+                setTimeout(function () {
+                    LoadTotalMake();
+                }, totalMakeGap * 1000)
+            }
+        })
+    }
+
+    function LoadLazyInfo() {
+        $.ajax({
+            url: 'insight/map/info',
+            type: 'GET',
+            cache: false,
+            success: function (data) {
+                NumUp("online", data.online, 2);
+                NumUp("tasks", data.tasks, 2);
+                NumUp("clients", data.clients, 2);
+                NumUp("region_total", data.region_total, 2);
+                NumUp("zone_total", data.zone_total, 2);
+
+// regions
+// var regions_count = 0;
+// $(data.regions).each(function (i, v) {
+// regions_count += v.count;
+// });
+                $(data.regions).each(function (i, v) {
+// $('#region_'+(i+1)).css('width', (v.count / regions_count * 100) + '%');
+                    $('#region_name_' + (i + 1)).text(v.name);
+                    NumUp('region_count_' + (i + 1), v.count, 2);
+                });
+
+// zones
+// var zones_count = 0;
+// $(data.zones).each(function (i, v) {
+// zones_count += v.count;
+// });
+                $(data.zones).each(function (i, v) {
+// $('#zone_'+(i+1)).css('width', (v.count / zones_count * 100) + '%');
+                    $('#zone_name_' + (i + 1)).text(v.name);
+                    NumUp('zone_count_' + (i + 1), v.count, 2);
+                });
+            },
+            complete: function () {
+                setTimeout(function () {
+                    LoadLazyInfo();
+                }, infoGap * 1000)
+            }
+        })
+    }
+
+    // 加载layout
+    function LayoutPipe() {
+        var pop = designArr.pop();
+        if (pop != undefined) {
+            if (currentOverlay != undefined) {
+                RemoveOverlay(currentOverlay);
+            }
+            LoadOverlay(pop.map_x, pop.map_y, pop.nickname, pop.headimgurl, pop.region_name, pop.account_name, pop.account_logo)
+        }
+    }
+
+    function LoadImage(url, callback) {
+        var img = new Image(); //创建一个Image对象，实现图片的预下载
+        img.src = url;
+
+        if (img.complete) { // 如果图片已经存在于浏览器缓存，直接调用回调函数
+            callback.call(img);
+            return; // 直接返回，不用再处理onload事件
+        }
+
+        img.onload = function () { //图片下载完毕时异步调用callback函数。
+            callback.call(img);//将回调函数的this替换为Image对象
+        };
+    }
+
+    function LoadDesign() {
+        $.ajax({
+            url: 'insight/map/designs?count=5&last=' + lastDesignID,
+            type: 'GET',
+            cache: false,
+            success: function (data) {
+                $(data).each(function (i, v) {
+                    if (v.id > lastDesignID) {
+                        lastDesignID = v.id;
+                    }
+
+// 预加载头像
+                    LoadImage(v.headimgurl, function () {
+// 预加载公众号logo
+                        LoadImage(v.account_logo, function () {
+                            designArr.push(v);
+                        });
+                    });
+                });
+
+                if (designTimer == undefined) {
+// 队列取值定时器
+                    designTimer = setInterval(function () {
+                        LayoutPipe();
+                    }, 1000)
+                }
+            },
+            complete: function () {
+                setTimeout(function () {
+                    LoadDesign();
+                }, designGap * 1000)
+            }
+        })
+    }
+
+    $('#kiosk').click(function () {
+        document.documentElement.webkitRequestFullScreen();
+    });
+</script>
