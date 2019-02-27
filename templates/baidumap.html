@@ -89,29 +89,17 @@
 <div id="map"></div>
 <script type="text/javascript">
 
-    var map;
+    // 刷新时间间隔
+    var interval_time = 3000;
 
+    // 服务器地址
     var base_url = 'http://123.207.152.86:8081/';
 
-    var all_users, new_users, wait_users;
+    var map;
 
-    function initData() {
-        $.get(base_url + 'total_count', function (resp) {
-            all_users = resp['data']['users'].slice(0, 2);
-            for (var i = 0; i < all_users.length; i++) {
-                var item = all_users[i];
-                addOverlay(item);
-            }
-        });
-    }
+    var all_users, new_users;
 
-    function refreshData() {
-        $.get(base_url + 'user', function (resp) {
-            if (resp.status_code === 200) {
-                new_users = resp.data
-            }
-        });
-    }
+    var basicPointOverlay = null;
 
     function initMap() {
         map = new BMap.Map("map");
@@ -122,7 +110,7 @@
 
     function ComplexCustomOverlay(item) {
         this._item = item;
-        this._point = new BMap.Point(item.long, item.lat);
+        this._point = new BMap.Point(this._item.long, this._item.lat);
         console.log(this._point);
 
         ComplexCustomOverlay.prototype = new BMap.Overlay();
@@ -147,29 +135,110 @@
     }
 
 
-    function addOverlay(data) {
-        var overlay = new ComplexCustomOverlay(data);
-        map.addOverlay(overlay)
+    function addBasicPointOverlay(data) {
+        if (basicPointOverlay != null) {
+            removeOverlay(basicPointOverlay);
+        }
+        var points = [];
+        for (var i = 0; i < data.length; i++) {
+            points.push(data[i].point)
+        }
+        var options = {
+            size: BMAP_POINT_SIZE_SMALL,
+            shape: BMAP_POINT_SHAPE_CIRCLE,
+            color: 'rgba(7,120,249,0.5)'
+        };
+        basicPointOverlay = new BMap.PointCollection(points, options);
+        map.addOverlay(basicPointOverlay);
+    }
+
+    function addHighlightOverlay(data) {
+        var points = [];
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].point !== undefined) {
+                points.push(data[i].point)
+            }
+        }
+        var options = {
+            size: BMAP_POINT_SIZE_SMALL,
+            shape: BMAP_POINT_SHAPE_CIRCLE,
+            color: 'rgba(7,120,249,0.5)'
+        };
+        var highlightPointOverlay = new BMap.PointCollection(points, options);
+        map.addOverlay(basicPointOverlay);
+
+        var taskId = setInterval(function () {
+            removeOverlay(highlightPointOverlay);
+            map.addOverlay(basicPointOverlay)
+        }, 200);
+
+        setTimeout(function () {
+            clearInterval(taskId);
+        }, interval_time)
+    }
+
+    function addHeaderImageOverlay(item) {
+        var overlay = new ComplexCustomOverlay(item);
+        map.addOverlay(overlay);
+        setTimeout(function () {
+            removeOverlay(overlay);
+        }, interval_time - 100)
     }
 
     function removeOverlay(overlay) {
         map.removeOverlay(overlay)
     }
 
-
-    function Timer(func) {
-
-        Timer.prototype.start = function (interval) {
-            this._taskId = setInterval(func, interval)
-        };
-
-        Timer.prototype.stop = function () {
-            clearInterval(this._taskId)
-        };
-        func();
+    function convertData(data) {
+        for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+            if (item.point === undefined) {
+                item.point = new BMap.Point(data[i].long, data[i].lat)
+            }
+        }
+        return data;
     }
 
-    refreshData()
+    function append(list) {
+        for (var i = 0; i < list.length; i++) {
+            if (all_users.indexOf(list[i])) {
+                all_users.push(list[i])
+            }
+        }
+    }
+
+    function loadData() {
+        function init() {
+            $.get(base_url + 'total_count', function (resp) {
+                if (resp.status_code === 200) {
+                    all_users = convertData(resp.data.users);
+                    addBasicPointOverlay(all_users);
+                }
+            });
+        }
+
+        function refresh() {
+            $.get(base_url + 'user', function (resp) {
+                if (resp.status_code === 200 && resp.data.length !== 0) {
+                    new_users = convertData(resp.data);
+                    var item = new_users[Math.floor(Math.random() * new_users.length)];
+                    addHeaderImageOverlay(item);
+                    addHighlightOverlay(new_users);
+                    append(new_users);
+                    addBasicPointOverlay(all_users);
+                    new_users = []
+
+                }
+            });
+        }
+
+
+        init();
+        setInterval(refresh, interval_time)
+    }
+
+    initMap();
+    loadData();
 
 </script>
 </body>
