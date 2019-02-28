@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script>
+
+    var queue = [1, 2, 3, 4, 5, 6, 19, 20, 50, 100, 12];
+
+    var a = [7, 8, 9, 10, 11, 12, 12, 13, 145, 15, 15, 18];
+    var c = [7, 8, 9, 10, 11];
+
+    function Queue() {
+
+        this._max_num = 10;
+        this._queue = [];
+
+        Queue.prototype.push = function (value) {
+            var length = this._queue.length;
+            if (Array.isArray(value)) {
+                var diff = length + value.length - this._max_num;
+                this._queue = this._queue.concat(value);
+                if (diff > 0) {
+                    this._queue.splice(0, diff);
+                }
+            } else {
+                if (length >= this._max_num) {
+                    this._queue.shift();
+                }
+                this._queue.push(value);
+            }
+        };
+
+        Queue.prototype.get = function (num) {
+            if (num === undefined) {
+                num = 1;
+            }
+            if (num === 1) {
+                return this._queue.shift();
+            }
+            return this._queue.splice(0, num);
+        };
+
+        Queue.prototype.all = function () {
+            return this._queue
+        }
+    }
+
+    var q = new Queue();
+    q.push(queue);
+    q.push(c);
+    console.log(q.all())
+
+</script>
+
+</body>
+</html>

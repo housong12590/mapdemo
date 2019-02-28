@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>加载闪烁点</title>
+    <title>地图</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
@@ -92,27 +92,45 @@
     // 刷新时间间隔
     var interval_time = 3000;
 
+    // 存活时间 单位秒
+    var active_time = 5 * 60;
+
+    var queue_max_num = 100;
+
+    var show_num = 2;
+
     // 服务器地址
-    var base_url = 'http://123.207.152.86:8081/';
+    //var base_url = 'http://123.207.152.86:8081/';
+    var base_url = 'http://127.0.0.1:5000/';
 
-    var map;
+    var map = null;
 
-    var all_users, new_users;
+    var today_users = [];
 
-    var basicPointOverlay = null;
+    var active_users = [];
+
+    var all_points = [];
+
+    var queue = new Queue();
+
+    var activeDataSet = null;
+
+    var basicDataSet = null;
+
+    var activePointMapvLayer = null;
+
+    var basicPointMapvLayer = null;
 
     function initMap() {
         map = new BMap.Map("map");
-        map.centerAndZoom(new BMap.Point(116.3964, 39.9093), 5);
+        map.centerAndZoom(new BMap.Point(106.28, 38.47), 5);
         map.enableScrollWheelZoom();
         map.setMapStyle({style: 'dark'});
     }
 
     function ComplexCustomOverlay(item) {
         this._item = item;
-        this._point = new BMap.Point(this._item.long, this._item.lat);
-        console.log(this._point);
-
+        this._point = item.point;
         ComplexCustomOverlay.prototype = new BMap.Overlay();
         ComplexCustomOverlay.prototype.initialize = function (map) {
             this._map = map;
@@ -135,110 +153,208 @@
     }
 
 
-    function addBasicPointOverlay(data) {
-        if (basicPointOverlay != null) {
-            removeOverlay(basicPointOverlay);
-        }
-        var points = [];
-        for (var i = 0; i < data.length; i++) {
-            points.push(data[i].point)
-        }
-        var options = {
-            size: BMAP_POINT_SIZE_SMALL,
-            shape: BMAP_POINT_SHAPE_CIRCLE,
-            color: 'rgba(7,120,249,0.5)'
-        };
-        basicPointOverlay = new BMap.PointCollection(points, options);
-        map.addOverlay(basicPointOverlay);
-    }
-
-    function addHighlightOverlay(data) {
-        var points = [];
-        for (var i = 0; i < data.length; i++) {
-            if (data[i].point !== undefined) {
-                points.push(data[i].point)
-            }
-        }
-        var options = {
-            size: BMAP_POINT_SIZE_SMALL,
-            shape: BMAP_POINT_SHAPE_CIRCLE,
-            color: 'rgba(7,120,249,0.5)'
-        };
-        var highlightPointOverlay = new BMap.PointCollection(points, options);
-        map.addOverlay(basicPointOverlay);
-
-        var taskId = setInterval(function () {
-            removeOverlay(highlightPointOverlay);
-            map.addOverlay(basicPointOverlay)
-        }, 200);
-
+    function customOverlay(item) {
+        var mCustomOverlay = new ComplexCustomOverlay(item);
+        map.addOverlay(mCustomOverlay);
         setTimeout(function () {
-            clearInterval(taskId);
-        }, interval_time)
-    }
-
-    function addHeaderImageOverlay(item) {
-        var overlay = new ComplexCustomOverlay(item);
-        map.addOverlay(overlay);
-        setTimeout(function () {
-            removeOverlay(overlay);
+            map.removeOverlay(mCustomOverlay);
         }, interval_time - 100)
-    }
-
-    function removeOverlay(overlay) {
-        map.removeOverlay(overlay)
     }
 
     function convertData(data) {
         for (var i = 0; i < data.length; i++) {
             var item = data[i];
             if (item.point === undefined) {
-                item.point = new BMap.Point(data[i].long, data[i].lat)
+                item.point = new BMap.Point(data[i].lng, data[i].lat)
             }
         }
         return data;
     }
 
-    function append(list) {
-        for (var i = 0; i < list.length; i++) {
-            if (all_users.indexOf(list[i])) {
-                all_users.push(list[i])
+
+    function activePoints(data) {
+        var points = [];
+        data.forEach(function (value) {
+            var point = [value.lng, value.lat];
+            points.push({
+                geometry: {
+                    type: 'Point',
+                    coordinates: point
+                },
+                time: Math.random() * 10
+            })
+        });
+        if (activeDataSet == null) {
+            activeDataSet = new mapv.DataSet();
+        }
+        activeDataSet.set(points);
+        var options = {
+            fillStyle: 'rgba(255, 255, 255, 0.8)',
+            size: 4,
+            draw: 'simple',
+            shadowColor: '#fff',
+            shadowBlur: 40,
+            animation: {
+                steps: 10,
+                trails: 1,
+                duration: 1
             }
+        };
+        if (activePointMapvLayer == null) {
+            activePointMapvLayer = new mapv.baiduMapLayer(map, activeDataSet, options);
         }
     }
 
-    function loadData() {
-        function init() {
+    function basisPoints(data) {
+        var points = [];
+        data.forEach(function (value) {
+            var point = [value.lng, value.lat];
+            points.push({
+                geometry: {
+                    type: 'Point',
+                    coordinates: point
+                }
+            })
+        });
+        if (basicDataSet == null) {
+            basicDataSet = new mapv.DataSet();
+        }
+        basicDataSet.set(points);
+        var options = {
+            fillStyle: 'rgba(255, 250, 0, 0.8)',
+            size: 2,
+            bigData: 'Point',
+            draw: 'simple'
+        };
+        if (basicPointMapvLayer == null) {
+            basicPointMapvLayer = new mapv.baiduMapLayer(map, basicDataSet, options);
+        }
+    }
+
+
+    function initData() {
+        function loadActive() {
             $.get(base_url + 'total_count', function (resp) {
                 if (resp.status_code === 200) {
-                    all_users = convertData(resp.data.users);
-                    addBasicPointOverlay(all_users);
+                    today_users = convertData(resp.data.users);
+                    active_users = checkDataExpire(resp.data.users);
+                    activePoints(active_users)
                 }
             });
         }
 
-        function refresh() {
+        function loadPoints() {
+            $.get(base_url + 'all', function (resp) {
+                if (resp.status_code === 200) {
+                    all_points = resp.data;
+                    basisPoints(resp.data);
+                }
+            })
+        }
+
+        function refreshActive() {
             $.get(base_url + 'user', function (resp) {
                 if (resp.status_code === 200 && resp.data.length !== 0) {
-                    new_users = convertData(resp.data);
-                    var item = new_users[Math.floor(Math.random() * new_users.length)];
-                    addHeaderImageOverlay(item);
-                    addHighlightOverlay(new_users);
-                    append(new_users);
-                    addBasicPointOverlay(all_users);
-                    new_users = []
+                    var data = convertData(resp.data);
+                    queue.push(resp.data);
+                    active_users = active_users.concat(resp.data);
+                    active_users = checkDataExpire(active_users);
+                    activePoints(active_users);
 
+                    data.forEach(function (value) {
+                        all_points.push({lng: value.lng, lat: value.lat})
+                    });
+                    if (data.length !== 0) {
+                        basisPoints(all_points);
+                    }
                 }
             });
         }
 
+        loadPoints();
+        loadActive();
+        setInterval(refreshActive, interval_time)
+    }
 
-        init();
-        setInterval(refresh, interval_time)
+    function Queue() {
+
+        this._max_num = queue_max_num;
+        this._queue = [];
+        this.length = 0;
+
+        Queue.prototype.push = function (value) {
+            var length = this._queue.length;
+            if (Array.isArray(value)) {
+                var diff = length + value.length - this._max_num;
+                this._queue = this._queue.concat(value);
+                if (diff > 0) {
+                    this._queue.splice(0, diff);
+                }
+            } else {
+                if (length >= this._max_num) {
+                    this._queue.shift();
+                }
+                this._queue.push(value);
+            }
+            this.length = this._queue.length;
+        };
+
+        Queue.prototype.get = function (num) {
+            if (num === undefined) {
+                num = 1;
+            }
+            if (num === 1) {
+                return this._queue.shift();
+            }
+            if (num > this._queue.length) {
+                num = this._queue.length;
+            }
+            return this._queue.splice(0, num);
+        };
+
+        Queue.prototype.getAll = function () {
+            return this._queue
+        };
+
+        Queue.prototype.isEmpty = function () {
+            return this._queue.length === 0;
+        }
+    }
+
+    function getTimestamp() {
+        var tmp = Date.parse(new Date()).toString();
+        return ~~tmp.substr(0, 10);
+    }
+
+    function checkDataExpire(data) {
+        var timestamp = getTimestamp();
+        var tempArray = [];
+        data.forEach(function (value) {
+            if (timestamp - ~~value.login_time < active_time) {
+                tempArray.push(value);
+            }
+        });
+        return tempArray;
+    }
+
+    function runnable() {
+        setInterval(function () {
+            var data = queue.get(show_num);
+            if (data !== undefined && data.length !== 0) {
+                if (Array.isArray(data)) {
+                    data.forEach(function (value) {
+                        customOverlay(value);
+                    })
+                } else {
+                    customOverlay(data);
+                }
+            }
+        }, interval_time);
     }
 
     initMap();
-    loadData();
+    initData();
+    runnable();
 
 </script>
 </body>
